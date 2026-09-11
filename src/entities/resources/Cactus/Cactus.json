@@ -1,0 +1,36 @@
+{
+    "width": 220,
+    "height": 400,
+    "anchorX": 111,
+    "anchorY": 380,
+    "states": [
+        "level1",
+        "level2",
+        "level3",
+        "level4",
+        "level5"
+    ],
+    "animations": {
+        "level1": {
+            "length": 1
+        },
+        "level2": {
+            "length": 1
+        },
+        "level3": {
+            "length": 1
+        },
+        "level4": {
+            "length": 1
+        },
+        "level5": {
+            "length": 1
+        }
+    },
+    "collision": {
+        "type": "ellipse",
+        "rx": 20,
+        "ry": 10,
+        "rotation": 0
+    }
+}

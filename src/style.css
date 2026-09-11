@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap');
+
+:root {
+  color: #eff8df;
+  background: #14231f;
+  font-family: 'Space Grotesk', sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: #14231f;
+}
+
+#game-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(circle at 68% 28%, #315b4a 0, #1d3a31 34%, #14231f 78%);
+}
+
+#canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  image-rendering: pixelated;
+}
+
+.hud {
+  position: absolute;
+  top: clamp(1rem, 4vw, 3rem);
+  left: clamp(1rem, 5vw, 5rem);
+  width: min(23rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+  border: 1px solid rgba(239, 248, 223, 0.22);
+  background: rgba(20, 35, 31, 0.82);
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(0.5rem);
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: #a8d58c;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 500;
+}
+
+#status {
+  min-height: 2.5rem;
+  margin: 0.75rem 0 1.25rem;
+  color: #c2d4bf;
+}
+
+.balance-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(239, 248, 223, 0.16);
+  font-family: 'DM Mono', monospace;
+}
+
+.balance-row strong {
+  color: #f5d77b;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+button {
+  width: 100%;
+  margin-top: 1.25rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #a8d58c;
+  color: #14231f;
+  background: #a8d58c;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover,
+button:focus-visible {
+  background: #d3efb6;
+}

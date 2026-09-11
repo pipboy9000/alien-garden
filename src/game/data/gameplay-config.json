@@ -1,0 +1,30 @@
+{
+  "starterGreenhouseId": "greenhouse-01",
+  "offline": {
+    "maxAwaySeconds": 604800,
+    "terminalAbsenceSeconds": 604800
+  },
+  "care": {
+    "wateringDurationSeconds": 5,
+    "dryAfterSeconds": 10800,
+    "dryProductionMultiplier": 0.5,
+    "groomBoostMultiplier": 1.2,
+    "groomBoostSeconds": 3600,
+    "collectionRange": 1.25
+  },
+  "plants": {
+    "star-fern": {
+      "purchaseCost": 50,
+      "waterIntervalSeconds": 10800,
+      "deathAfterDrySeconds": 172800,
+      "pendingCapacity": 100,
+      "levels": [
+        {
+          "level": 1,
+          "productionPerSecond": 0.5,
+          "upgradeCost": 50
+        }
+      ]
+    }
+  }
+}

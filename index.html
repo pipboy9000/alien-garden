@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#14231f" />
+    <title>Alien Garden</title>
+  </head>
+  <body>
+    <main id="game-shell">
+      <canvas id="canvas" aria-label="Alien Garden greenhouse"></canvas>
+      <section class="hud" aria-label="Garden status">
+        <p class="eyebrow">Alien Garden</p>
+        <h1>Starter greenhouse</h1>
+        <p id="status" role="status">Booting Chicken Fart Engine...</p>
+        <div class="balance-row">
+          <span>Crystals</span>
+          <strong id="crystal-balance">0</strong>
+        </div>
+        <button id="reset-save" type="button">Reset local garden</button>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
