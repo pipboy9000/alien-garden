@@ -100,3 +100,63 @@ button:hover,
 button:focus-visible {
   background: #d3efb6;
 }
+
+.plant-popup {
+  position: absolute;
+  top: clamp(1rem, 4vw, 3rem);
+  right: clamp(1rem, 5vw, 5rem);
+  width: min(18rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+  border: 1px solid rgba(239, 248, 223, 0.22);
+  background: rgba(20, 35, 31, 0.9);
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(0.5rem);
+}
+
+.plant-popup-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #eff8df;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.plant-popup-close:hover,
+.plant-popup-close:focus-visible {
+  background: transparent;
+  color: #a8d58c;
+}
+
+.plant-popup h2 {
+  margin: 0 1.5rem 0.75rem 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.plant-popup-stats {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+}
+
+.plant-popup-stats div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.plant-popup-stats dt {
+  color: #a8d58c;
+}
+
+.plant-popup-stats dd {
+  margin: 0;
+  color: #f5d77b;
+}

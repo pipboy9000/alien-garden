@@ -19,6 +19,20 @@
         </div>
         <button id="reset-save" type="button">Reset local garden</button>
       </section>
+      <section id="plant-popup" class="plant-popup" aria-label="Selected plant" hidden>
+        <button id="plant-popup-close" class="plant-popup-close" type="button" aria-label="Close">&times;</button>
+        <h2 id="plant-popup-name"></h2>
+        <dl class="plant-popup-stats">
+          <div>
+            <dt>Level</dt>
+            <dd id="plant-popup-level"></dd>
+          </div>
+          <div>
+            <dt>Production</dt>
+            <dd id="plant-popup-production"></dd>
+          </div>
+        </dl>
+      </section>
     </main>
     <script type="module" src="/src/main.js"></script>
   </body>

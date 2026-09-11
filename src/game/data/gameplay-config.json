@@ -14,6 +14,7 @@
   },
   "plants": {
     "star-fern": {
+      "name": "Star-Fern",
       "purchaseCost": 50,
       "waterIntervalSeconds": 10800,
       "deathAfterDrySeconds": 172800,
@@ -23,6 +24,20 @@
           "level": 1,
           "productionPerSecond": 0.5,
           "upgradeCost": 50
+        }
+      ]
+    },
+    "crystal-cactus": {
+      "name": "Crystal Cactus",
+      "purchaseCost": 120,
+      "waterIntervalSeconds": 10800,
+      "deathAfterDrySeconds": 259200,
+      "pendingCapacity": 100,
+      "levels": [
+        {
+          "level": 1,
+          "productionPerSecond": 1.1,
+          "upgradeCost": 120
         }
       ]
     }
