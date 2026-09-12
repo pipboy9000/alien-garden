@@ -3,6 +3,9 @@ import { keyboard, keyPressed } from "@chickenfart/engine/input";
 import { addEntity } from "@chickenfart/engine/world";
 import * as Smoke from "./SmokePuff.js";
 import { Entity } from "@chickenfart/engine/entitiesFactory";
+import { getWalkTarget, clearWalkTarget } from "../game/state/navigationState.js";
+
+const WALK_TARGET_ARRIVE_DISTANCE = 6;
 
 export async function create(x, y) {
 
@@ -17,6 +20,13 @@ export async function create(x, y) {
     setCamPos(x, y);
 
     entity.onUpdate = async (dt) => {
+
+        const movingByKeys = keyboard.ArrowLeft || keyboard.KeyA || keyboard.ArrowRight || keyboard.KeyD
+            || keyboard.ArrowUp || keyboard.KeyW || keyboard.ArrowDown || keyboard.KeyS;
+
+        if (movingByKeys) {
+            clearWalkTarget();
+        }
 
         if (keyboard.ArrowLeft || keyboard.KeyA) {
             vx -= speed;
@@ -34,6 +44,23 @@ export async function create(x, y) {
 
         if (keyboard.ArrowDown || keyboard.KeyS) {
             vy += speed;
+        }
+
+        if (!movingByKeys) {
+            const walkTarget = getWalkTarget();
+            if (walkTarget) {
+                const dx = walkTarget.x - entity.x;
+                const dy = walkTarget.y - entity.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist <= WALK_TARGET_ARRIVE_DISTANCE) {
+                    clearWalkTarget();
+                } else {
+                    vx += (dx / dist) * speed;
+                    vy += (dy / dist) * speed;
+                    entity.setFlipX(dx < 0);
+                }
+            }
         }
 
         if (keyPressed.Space && entity.z === 0) {

@@ -3,6 +3,7 @@ import { loadGameState, resetGameState, saveGameState } from './game/state/gameS
 import { onSelectionChange, clearSelection } from './game/state/selectionState.js';
 import { clearPlants } from './game/state/plantRegistry.js';
 import { initPlantSelectionSystem } from './game/systems/plantSelection.js';
+import { initFloorNavigationSystem } from './game/systems/floorNavigation.js';
 import gameplayConfig from './game/data/gameplay-config.json';
 import './style.css';
 
@@ -54,6 +55,7 @@ async function boot() {
   clearPlants();
   await world.loadLevel(starterGreenhouseId);
   initPlantSelectionSystem();
+  await initFloorNavigationSystem({ levelId: starterGreenhouseId, floorEntityName: 'Greenhouse1' });
   statusElement.textContent = 'Starter greenhouse loaded. The garden is ready for its first plant.';
 }
 
