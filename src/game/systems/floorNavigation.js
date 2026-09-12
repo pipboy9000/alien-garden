@@ -1,11 +1,9 @@
 import { addEntity } from '@chickenfart/engine/world';
 import { mouse, mousePressed } from '@chickenfart/engine/input';
 import { isPointInEntityCollision } from '@chickenfart/engine/collision';
-import { getPlants } from '../state/plantRegistry.js';
 import { setWalkTarget, getWalkTarget } from '../state/navigationState.js';
+import { hoverOverPlant } from './plantSelection.js';
 
-const PLANT_CLICK_RADIUS = 30;
-const PLANT_CLICK_RADIUS_SQR = PLANT_CLICK_RADIUS * PLANT_CLICK_RADIUS;
 const MARKER_RADIUS = 6;
 
 // The engine treats floor items (like the greenhouse background) as pure background
@@ -26,16 +24,6 @@ async function loadFloorShape(levelId, floorEntityName) {
     scale: floorEntity.scale,
     collision: resourceJson.collision
   };
-}
-
-// Clicks near a plant are for selection (plantSelection.js), not for walking.
-function isClickNearPlant(worldX, worldY) {
-  for (const plant of getPlants()) {
-    const dx = plant.entity.x - worldX;
-    const dy = plant.entity.y - worldY;
-    if (dx * dx + dy * dy <= PLANT_CLICK_RADIUS_SQR) return true;
-  }
-  return false;
 }
 
 export async function initFloorNavigationSystem({ levelId, floorEntityName }) {
@@ -63,7 +51,7 @@ export async function initFloorNavigationSystem({ levelId, floorEntityName }) {
     },
     update() {
       if (!mousePressed.left) return;
-      if (isClickNearPlant(mouse.worldX, mouse.worldY)) return;
+      if (hoverOverPlant) return;
       if (!isPointInEntityCollision(floorShape, mouse.worldX, mouse.worldY)) return;
 
       setWalkTarget(mouse.worldX, mouse.worldY);

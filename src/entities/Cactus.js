@@ -1,5 +1,6 @@
 import { Entity } from "@chickenfart/engine/entitiesFactory";
 import { registerPlant } from "../game/state/plantRegistry.js";
+import { isPlantHovered } from "../game/systems/plantSelection.js";
 import gameplayConfig from "../game/data/gameplay-config.json";
 
 const plantId = "crystal-cactus";
@@ -21,6 +22,17 @@ export async function create(x, y) {
         productionPerSecond: level.productionPerSecond,
         purchaseCost: config.purchaseCost
     });
+
+
+    entity.onDrawBehind = (ctx) => {
+        if (isPlantHovered(entity)) {
+            ctx.beginPath();
+            ctx.fillStyle = "#44ff4488";
+            ctx.lineWidth = 2;
+            ctx.ellipse(entity.x, entity.y, 25, 12.5, 0, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    };
 
     return entity;
 }

@@ -3,8 +3,19 @@ import { mouse, mousePressed } from '@chickenfart/engine/input';
 import { getPlants } from '../state/plantRegistry.js';
 import { selectPlant, clearSelection } from '../state/selectionState.js';
 
-const SELECTION_RADIUS = 30;
-const SELECTION_RADIUS_SQR = SELECTION_RADIUS * SELECTION_RADIUS;
+export const SELECTION_RADIUS = 30;
+export const SELECTION_RADIUS_SQR = SELECTION_RADIUS * SELECTION_RADIUS;
+
+export let hoverOverPlant = null;
+
+export function getHoverOverPlant() {
+  return hoverOverPlant;
+}
+
+export function isPlantHovered(entity) {
+  if (!hoverOverPlant) return false;
+  return hoverOverPlant.entity === entity || hoverOverPlant === entity;
+}
 
 // Non-visual system entity: picks the closest plant within range of a click, anywhere on the stage.
 export function initPlantSelectionSystem() {
@@ -14,8 +25,6 @@ export function initPlantSelectionSystem() {
     active: true,
     draw() {},
     update() {
-      if (!mousePressed.left) return;
-
       let closestPlant = null;
       let closestDistSqr = SELECTION_RADIUS_SQR;
 
@@ -30,10 +39,14 @@ export function initPlantSelectionSystem() {
         }
       }
 
-      if (closestPlant) {
-        selectPlant(closestPlant.info);
-      } else {
-        clearSelection();
+      hoverOverPlant = closestPlant;
+
+      if (mousePressed.left) {
+        if (closestPlant) {
+          selectPlant(closestPlant.info);
+        } else {
+          clearSelection();
+        }
       }
     }
   });
