@@ -35,5 +35,35 @@ export async function create(x, y) {
         }
     };
 
+    entity.onDraw = (ctx) => {
+    
+        switch (entity.currState) {
+            case 'level1':
+                // Draw logic for level 1 cactus
+                let gradient = ctx.createRadialGradient(entity.x, entity.y - 75, Math.random() * 5 + 2, entity.x, entity.y - 75, Math.random() * 20 + 10);
+                gradient.addColorStop(0, "#ffffff44");
+                gradient.addColorStop(1, "#ff44ff00");
+                ctx.fillStyle = gradient;
+                // ctx.fillStyle = 'red';
+                ctx.mix
+                ctx.fillRect(entity.x - 25, entity.y - 100, 50, 50);
+                break;
+            case 'level2':
+                // Draw logic for level 2 cactus
+                break;
+            case 'level3':
+                // Draw logic for level 3 cactus
+                break;
+            case 'level4':
+                // Draw logic for level 4 cactus
+                break;
+            default:
+                // Draw logic for default cactus state
+                break;
+        }
+
+    
+    }
+
     return entity;
 }
