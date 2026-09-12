@@ -5,7 +5,7 @@ import * as Smoke from "./SmokePuff.js";
 import { Entity } from "@chickenfart/engine/entitiesFactory";
 import { getWalkTarget, clearWalkTarget } from "../game/state/navigationState.js";
 
-const WALK_TARGET_ARRIVE_DISTANCE = 6;
+const WALK_TARGET_ARRIVE_DISTANCE = 10;
 
 export async function create(x, y) {
 

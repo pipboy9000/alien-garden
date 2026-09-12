@@ -43,7 +43,7 @@ export function initSelectionSystem() {
 
       if (mousePressed.left) {
         if (closest) {
-          selectItem(closest.info);
+          selectItem({ ...closest.info, entity: closest.entity });
         } else {
           clearSelection();
         }
