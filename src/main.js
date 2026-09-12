@@ -1,8 +1,8 @@
 import * as world from '@chickenfart/engine/world';
 import { loadGameState, resetGameState, saveGameState } from './game/state/gameState.js';
 import { onSelectionChange, clearSelection } from './game/state/selectionState.js';
-import { clearPlants } from './game/state/plantRegistry.js';
-import { initPlantSelectionSystem } from './game/systems/plantSelection.js';
+import { clearSelectables } from './game/state/selectableRegistry.js';
+import { initSelectionSystem } from './game/systems/selection.js';
 import { initFloorNavigationSystem } from './game/systems/floorNavigation.js';
 import gameplayConfig from './game/data/gameplay-config.json';
 import './style.css';
@@ -22,7 +22,8 @@ function renderHud() {
   crystalBalanceElement.textContent = String(gameState.crystals);
 }
 
-function renderPlantPopup(plant) {
+function renderPlantPopup(item) {
+  const plant = item && item.type === 'plant' ? item : null;
   plantPopupElement.hidden = !plant;
   if (!plant) return;
 
@@ -52,9 +53,9 @@ async function boot() {
     }
   });
 
-  clearPlants();
+  clearSelectables();
   await world.loadLevel(starterGreenhouseId);
-  initPlantSelectionSystem();
+  initSelectionSystem();
   await initFloorNavigationSystem({ levelId: starterGreenhouseId, floorEntityName: 'Greenhouse1' });
   statusElement.textContent = 'Starter greenhouse loaded. The garden is ready for its first plant.';
 }

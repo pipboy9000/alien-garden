@@ -1,29 +1,17 @@
 import { Entity } from "@chickenfart/engine/entitiesFactory";
 import { registerSelectable } from "../game/state/selectableRegistry.js";
 import { isSelectableHovered } from "../game/systems/selection.js";
-import gameplayConfig from "../game/data/gameplay-config.json";
-
-const plantId = "crystal-cactus";
 
 export async function create(x, y) {
 
-    let entity = await Entity.create(x, y, "Cactus");
-    entity.tag = "plant";
+    let entity = await Entity.create(x, y, "EmptyPot");
+    entity.tag = "empty-pot";
 
-    const config = gameplayConfig.plants[plantId];
-    const level = config.levels[0];
-
-    entity.setState(`level${level.level}`);
+    entity.setState("idle");
 
     registerSelectable(entity, {
-        type: "plant",
-        plantId,
-        name: config.name,
-        level: level.level,
-        productionPerSecond: level.productionPerSecond,
-        purchaseCost: config.purchaseCost
+        type: "empty-pot"
     });
-
 
     entity.onDrawBehind = (ctx) => {
         if (isSelectableHovered(entity)) {
@@ -37,3 +25,4 @@ export async function create(x, y) {
 
     return entity;
 }
+

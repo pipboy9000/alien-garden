@@ -1,19 +1,20 @@
 // Ephemeral UI selection state: not persisted, separate from the saved gameState.
-let selectedPlant = null;
+// The selected item's `info` shape varies by `type` (e.g. "plant", "empty-pot").
+let selectedItem = null;
 const listeners = new Set();
 
-export function selectPlant(plant) {
-  selectedPlant = plant;
+export function selectItem(item) {
+  selectedItem = item;
   notify();
 }
 
 export function clearSelection() {
-  selectedPlant = null;
+  selectedItem = null;
   notify();
 }
 
-export function getSelectedPlant() {
-  return selectedPlant;
+export function getSelectedItem() {
+  return selectedItem;
 }
 
 export function onSelectionChange(callback) {
@@ -23,6 +24,7 @@ export function onSelectionChange(callback) {
 
 function notify() {
   for (const callback of listeners) {
-    callback(selectedPlant);
+    callback(selectedItem);
   }
 }
+

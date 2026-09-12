@@ -2,7 +2,7 @@ import { addEntity } from '@chickenfart/engine/world';
 import { mouse, mousePressed } from '@chickenfart/engine/input';
 import { isPointInEntityCollision } from '@chickenfart/engine/collision';
 import { setWalkTarget, getWalkTarget } from '../state/navigationState.js';
-import { hoverOverPlant } from './plantSelection.js';
+import { hoverOverSelectable } from './selection.js';
 
 const MARKER_RADIUS = 6;
 
@@ -51,7 +51,7 @@ export async function initFloorNavigationSystem({ levelId, floorEntityName }) {
     },
     update() {
       if (!mousePressed.left) return;
-      if (hoverOverPlant) return;
+      if (hoverOverSelectable) return;
       if (!isPointInEntityCollision(floorShape, mouse.worldX, mouse.worldY)) return;
 
       setWalkTarget(mouse.worldX, mouse.worldY);

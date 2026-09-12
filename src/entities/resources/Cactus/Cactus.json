@@ -7,8 +7,7 @@
         "level1",
         "level2",
         "level3",
-        "level4",
-        "level5"
+        "level4"
     ],
     "animations": {
         "level1": {
@@ -21,9 +20,6 @@
             "length": 1
         },
         "level4": {
-            "length": 1
-        },
-        "level5": {
             "length": 1
         }
     },
