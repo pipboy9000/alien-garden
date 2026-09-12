@@ -1,5 +1,5 @@
 import { Entity } from "@chickenfart/engine/entitiesFactory";
-import { selectPlant } from "../game/state/selectionState.js";
+import { registerPlant } from "../game/state/plantRegistry.js";
 import gameplayConfig from "../game/data/gameplay-config.json";
 
 const plantId = "crystal-cactus";
@@ -14,15 +14,13 @@ export async function create(x, y) {
 
     entity.setState(`level${level.level}`);
 
-    entity.onClick = () => {
-        selectPlant({
-            plantId,
-            name: config.name,
-            level: level.level,
-            productionPerSecond: level.productionPerSecond,
-            purchaseCost: config.purchaseCost
-        });
-    };
+    registerPlant(entity, {
+        plantId,
+        name: config.name,
+        level: level.level,
+        productionPerSecond: level.productionPerSecond,
+        purchaseCost: config.purchaseCost
+    });
 
     return entity;
 }

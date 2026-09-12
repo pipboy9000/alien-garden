@@ -1,4 +1,4 @@
-import { setCamTarget } from "@chickenfart/engine/canvas";
+import { setCamTarget, setCamPos } from "@chickenfart/engine/canvas";
 import { keyboard, keyPressed } from "@chickenfart/engine/input";
 import { addEntity } from "@chickenfart/engine/world";
 import * as Smoke from "./SmokePuff.js";
@@ -13,6 +13,8 @@ export async function create(x, y) {
     let vx = 0;
     let vy = 0;
     let vz = 0;
+
+    setCamPos(x, y);
 
     entity.onUpdate = async (dt) => {
 

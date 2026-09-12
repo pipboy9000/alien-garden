@@ -10,5 +10,14 @@
         "idle": {
             "length": 1
         }
+    },
+    "collision": {
+        "type": "rhombus",
+        "width": 650,
+        "height": 650,
+        "offsetX": 0,
+        "offsetY": 0,
+        "scaleY": 0.5,
+        "rotation": 0.8
     }
 }
