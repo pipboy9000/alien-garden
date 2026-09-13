@@ -1,4 +1,4 @@
-import { addEntity } from '@chickenfart/engine/world';
+import { addEntity, getEntityByTag } from '@chickenfart/engine/world';
 import { mouse, mousePressed } from '@chickenfart/engine/input';
 import { isPointInEntityCollision } from '@chickenfart/engine/collision';
 import { setWalkTarget, getWalkTarget } from '../state/navigationState.js';
@@ -40,11 +40,23 @@ export async function initFloorNavigationSystem({ levelId, floorEntityName }) {
     draw(ctx) {
       const target = getWalkTarget();
       if (!target) return;
+      const player = getEntityByTag('player');
 
       ctx.save();
+      if (player) {
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.moveTo(player.x, player.y);
+        ctx.lineTo(target.x, target.y);
+        ctx.stroke();
+      }
+
       ctx.beginPath();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
       ctx.lineWidth = 2;
+      ctx.setLineDash([]);
       ctx.arc(target.x, target.y, MARKER_RADIUS, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
