@@ -13,8 +13,8 @@
     },
     "collision": {
         "type": "rhombus",
-        "width": 650,
-        "height": 650,
+        "width": 750,
+        "height": 750,
         "offsetX": 0,
         "offsetY": 0,
         "scaleY": 0.5,

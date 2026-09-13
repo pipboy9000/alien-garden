@@ -7,6 +7,8 @@ export async function create(x, y) {
 
     entity.scale = 3;
 
+    entity.z = 5;
+
     let player;
 
     let vx = Math.random() * 10 - 5;
@@ -29,12 +31,12 @@ export async function create(x, y) {
         entity.y += vy;
         entity.z += vz;
 
-        vx *= 0.9;
-        vy *= 0.9;
+        vx *= 0.95;
+        vy *= 0.95;
 
         //bounce
         if (entity.z > 0) {
-            vz -= 0.2;
+            vz -= 0.5;
         } else {
             entity.z = 0;
             vz *= -0.6;
