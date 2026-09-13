@@ -58,7 +58,7 @@ function renderBuyPopup(item) {
     thumb.className = 'buy-option-thumb';
     thumb.width = 56;
     thumb.height = 102;
-    drawPlantThumbnail(thumb, catalogEntry.resourceName);
+    drawPlantThumbnail(thumb, plantId, 1);
 
     const name = document.createElement('span');
     name.className = 'buy-option-name';

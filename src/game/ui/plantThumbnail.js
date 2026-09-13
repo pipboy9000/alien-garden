@@ -1,26 +1,25 @@
-// Renders the first frame of a plant's spritesheet (its smallest/"baby" sprite) into a
-// thumbnail canvas, for use in UI like the buy-a-plant popup.
-const resourceCache = new Map();
+// Renders a plant's level-specific UI thumbnail into a canvas.
+const thumbnailCache = new Map();
 
-function loadResource(resourceName) {
-  let promise = resourceCache.get(resourceName);
+function loadThumbnail(plantId, level) {
+  const cacheKey = `${plantId}:level-${level}`;
+  let promise = thumbnailCache.get(cacheKey);
   if (promise) return promise;
 
   promise = (async () => {
-    const json = await fetch(`src/entities/resources/${resourceName}/${resourceName}.json`).then((res) => res.json());
     const image = new Image();
-    image.src = `src/entities/resources/${resourceName}/${resourceName}.png`;
+    image.src = `/thumbnails/${plantId}/level-${level}.png`;
     await image.decode();
-    return { json, image };
+    return image;
   })();
 
-  resourceCache.set(resourceName, promise);
+  thumbnailCache.set(cacheKey, promise);
   return promise;
 }
 
-export async function drawPlantThumbnail(canvas, resourceName) {
-  const { json, image } = await loadResource(resourceName);
+export async function drawPlantThumbnail(canvas, plantId, level = 1) {
+  const image = await loadThumbnail(plantId, level);
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(image, 0, 0, json.width, json.height, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 }
