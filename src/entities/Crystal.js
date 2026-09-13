@@ -51,8 +51,8 @@ export async function create(x, y) {
 
         if (dist < 100) {
             let dirToPlayer = Math.atan2(player.y - entity.y, player.x - entity.x);
-            vx += Math.cos(dirToPlayer) * 0.6;
-            vy += Math.sin(dirToPlayer) * 0.6;
+            vx += Math.cos(dirToPlayer) * 0.3;
+            vy += Math.sin(dirToPlayer) * 0.3;
         }
 
         if (dist < 30) {
