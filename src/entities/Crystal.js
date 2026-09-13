@@ -1,7 +1,7 @@
 import { Entity } from "@chickenfart/engine/entitiesFactory";
 import { getEntityByTag,removeEntity } from "@chickenfart/engine/world";
 
-export async function create(x, y) {
+export async function create(x, y, onCollect) {
 
     let entity = await Entity.create(x, y, "Crystal");
 
@@ -20,8 +20,20 @@ export async function create(x, y) {
         player = getEntityByTag("player");
     }
 
+    let isCollected = false;
+
+    const triggerCollect = () => {
+        if (!isCollected) {
+            isCollected = true;
+            if (typeof onCollect === "function") {
+                onCollect(entity);
+            }
+        }
+    };
+
     entity.onAnimationEvent = (eventName) => {
         if (eventName === "end") {
+            triggerCollect();
             removeEntity(entity);
         }
     }
@@ -56,6 +68,7 @@ export async function create(x, y) {
         }
 
         if (dist < 30) {
+            triggerCollect();
             entity.setState("pickup")
         }
     }

@@ -27,17 +27,26 @@ export async function create(x, y) {
     });
 
     let dropTimerMs = 0;
+    let activeCrystalsCount = 0;
+    const maxCrystals = config.pendingCapacity ?? 50;
 
     entity.onUpdate = async (dt) => {
+        if (!document.hasFocus() || document.hidden) return;
+
         const dropRatePerSecond = level.crystalDropRatePerSecond;
         if (!dropRatePerSecond) return;
+
+        if (activeCrystalsCount >= maxCrystals) return;
 
         const dropIntervalMs = 1000 / dropRatePerSecond;
         dropTimerMs += dt;
 
         if (dropTimerMs >= dropIntervalMs) {
             dropTimerMs -= dropIntervalMs;
-            const crystal = await Crystal.create(entity.x, entity.y);
+            activeCrystalsCount++;
+            const crystal = await Crystal.create(entity.x, entity.y, () => {
+                activeCrystalsCount = Math.max(0, activeCrystalsCount - 1);
+            });
             addEntity(crystal);
         }
     };

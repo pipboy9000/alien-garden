@@ -32,7 +32,7 @@
       "purchaseCost": 120,
       "waterIntervalSeconds": 10800,
       "deathAfterDrySeconds": 259200,
-      "pendingCapacity": 100,
+      "pendingCapacity": 50,
       "levels": [
         {
           "level": 1,
