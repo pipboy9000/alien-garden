@@ -45,7 +45,7 @@ export async function create(x, y) {
                 gradient.addColorStop(1, "#ff44ff00");
                 ctx.fillStyle = gradient;
                 // ctx.fillStyle = 'red';
-                ctx.mix
+                ctx.globalCompositeOperation = 'lighter';
                 ctx.fillRect(entity.x - 25, entity.y - 100, 50, 50);
                 break;
             case 'level2':
