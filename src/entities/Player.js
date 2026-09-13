@@ -12,7 +12,7 @@ export async function create(x, y) {
     let entity = await Entity.create(x, y, "Player");
     entity.tag = "player";
 
-    let speed = 2;
+    let speed = 4;
     let vx = 0;
     let vy = 0;
     let vz = 0;

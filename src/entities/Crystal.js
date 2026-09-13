@@ -5,11 +5,14 @@ export async function create(x, y) {
 
     let entity = await Entity.create(x, y, "Crystal");
 
+    entity.scale = 3;
+
     let player;
 
     let vx = Math.random() * 10 - 5;
     let vy = Math.random() * 10 - 5;
-    let vz = Math.random() * 2 + 2;
+    // let vz = Math.random() * 10 - 2;
+    let vz = 5;
     
     entity.onMount = () => {
         player = getEntityByTag("player");
@@ -46,8 +49,8 @@ export async function create(x, y) {
 
         if (dist < 100) {
             let dirToPlayer = Math.atan2(player.y - entity.y, player.x - entity.x);
-            vx += Math.cos(dirToPlayer) * 0.3;
-            vy += Math.sin(dirToPlayer) * 0.3;
+            vx += Math.cos(dirToPlayer) * 0.6;
+            vy += Math.sin(dirToPlayer) * 0.6;
         }
 
         if (dist < 30) {

@@ -37,6 +37,7 @@
         {
           "level": 1,
           "productionPerSecond": 1.1,
+          "crystalDropRatePerSecond": 0.5,
           "upgradeCost": 120
         }
       ]

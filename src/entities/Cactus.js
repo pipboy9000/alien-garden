@@ -1,6 +1,8 @@
 import { Entity } from "@chickenfart/engine/entitiesFactory";
+import { addEntity } from "@chickenfart/engine/world";
 import { registerSelectable } from "../game/state/selectableRegistry.js";
 import { isSelectableHovered } from "../game/systems/selection.js";
+import * as Crystal from "./Crystal.js";
 import gameplayConfig from "../game/data/gameplay-config.json";
 
 const plantId = "crystal-cactus";
@@ -24,6 +26,21 @@ export async function create(x, y) {
         purchaseCost: config.purchaseCost
     });
 
+    let dropTimerMs = 0;
+
+    entity.onUpdate = async (dt) => {
+        const dropRatePerSecond = level.crystalDropRatePerSecond;
+        if (!dropRatePerSecond) return;
+
+        const dropIntervalMs = 1000 / dropRatePerSecond;
+        dropTimerMs += dt;
+
+        if (dropTimerMs >= dropIntervalMs) {
+            dropTimerMs -= dropIntervalMs;
+            const crystal = await Crystal.create(entity.x, entity.y);
+            addEntity(crystal);
+        }
+    };
 
     entity.onDrawBehind = (ctx) => {
         if (isSelectableHovered(entity)) {
