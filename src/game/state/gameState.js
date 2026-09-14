@@ -1,12 +1,14 @@
 const SAVE_KEY = 'alien-garden:save';
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;
 
 function createDefaultGameState() {
   return {
     schemaVersion: SAVE_VERSION,
     crystals: 0,
+    globalUpgrades: {},
     lastVisitedGreenhouseId: 'greenhouse-01',
     lastSavedAt: Date.now(),
+    lastProductionSettledAt: Date.now(),
     greenhouses: {
       'greenhouse-01': {
         unlocked: true,
@@ -16,6 +18,18 @@ function createDefaultGameState() {
   };
 }
 
+function migrateGameState(value) {
+  if (value.schemaVersion === 1 && Number.isFinite(value.lastSavedAt)) {
+    return {
+      ...value,
+      schemaVersion: SAVE_VERSION,
+      lastProductionSettledAt: value.lastSavedAt
+    };
+  }
+
+  return value;
+}
+
 function isValidGameState(value) {
   return Boolean(
     value &&
@@ -23,6 +37,7 @@ function isValidGameState(value) {
       Number.isFinite(value.crystals) &&
       typeof value.lastVisitedGreenhouseId === 'string' &&
       Number.isFinite(value.lastSavedAt) &&
+      Number.isFinite(value.lastProductionSettledAt) &&
       value.greenhouses &&
       typeof value.greenhouses === 'object'
   );
@@ -31,7 +46,8 @@ function isValidGameState(value) {
 export function loadGameState() {
   try {
     const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-    return isValidGameState(saved) ? saved : createDefaultGameState();
+    const migrated = migrateGameState(saved);
+    return isValidGameState(migrated) ? migrated : createDefaultGameState();
   } catch {
     return createDefaultGameState();
   }

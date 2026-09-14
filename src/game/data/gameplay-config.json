@@ -25,6 +25,7 @@
   "crystals": {
     "pickupValue": 1
   },
+  "globalUpgrades": {},
   "plants": {
     "star-fern": {
       "name": "Star-Fern",

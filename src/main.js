@@ -8,6 +8,7 @@ import { plantCatalog, getBuyablePlantIds } from './game/data/plantCatalog.js';
 import { drawPlantThumbnail } from './game/ui/plantThumbnail.js';
 import { getSlotPosition, seedStarterSlots } from './game/systems/greenhouseSlots.js';
 import { applyOfflineProduction } from './game/systems/offlineProduction.js';
+import { settleProduction } from './game/systems/production.js';
 import * as EmptyPot from './entities/EmptyPot.js';
 import gameplayConfig from './game/data/gameplay-config.json';
 import './style.css';
@@ -32,12 +33,18 @@ function renderHud() {
   crystalBalanceElement.textContent = String(gameState.crystals);
 }
 
+function persistGameState() {
+  gameState = settleProduction(gameState, gameplayConfig).gameState;
+  gameState = saveGameState(gameState);
+  renderHud();
+}
+
 function collectCrystal() {
-  gameState = saveGameState({
+  gameState = {
     ...gameState,
     crystals: gameState.crystals + gameplayConfig.crystals.pickupValue
-  });
-  renderHud();
+  };
+  persistGameState();
 }
 
 function renderPlantPopup(item) {
@@ -87,6 +94,8 @@ function renderBuyPopup(item) {
 }
 
 async function buyPlant(pot, plantId) {
+  persistGameState();
+
   const config = gameplayConfig.plants[plantId];
   const catalogEntry = plantCatalog[plantId];
   if (!config || !catalogEntry || gameState.crystals < config.purchaseCost) return;
@@ -103,8 +112,7 @@ async function buyPlant(pot, plantId) {
     crystals: gameState.crystals - config.purchaseCost,
     greenhouses: { ...gameState.greenhouses, [starterGreenhouseId]: { ...greenhouseState, plants } }
   };
-  saveGameState(gameState);
-  renderHud();
+  persistGameState();
 
   const { x, y, slotId } = pot.entity;
   unregisterSelectable(pot.entity);
@@ -177,13 +185,12 @@ async function boot() {
       ? `Welcome back! Your garden produced ${Math.floor(crystalsGained)} crystals while you were away.`
       : 'Starter greenhouse loaded. The garden is ready for its first plant.';
 
-  setInterval(() => saveGameState(gameState), AUTOSAVE_INTERVAL_MS);
+  setInterval(persistGameState, AUTOSAVE_INTERVAL_MS);
 }
 
 resetSaveButton.addEventListener('click', () => {
   gameState = resetGameState();
-  saveGameState(gameState);
-  renderHud();
+  persistGameState();
   statusElement.textContent = 'Local garden reset.';
 });
 
