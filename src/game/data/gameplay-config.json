@@ -4,6 +4,16 @@
     "maxAwaySeconds": 604800,
     "terminalAbsenceSeconds": 604800
   },
+  "greenhouses": {
+    "greenhouse-01": {
+      "starterSlotIds": ["slot-1"],
+      "slots": [
+        { "id": "slot-1", "x": 1016, "y": 561 },
+        { "id": "slot-2", "x": 929, "y": 576 },
+        { "id": "slot-3", "x": 819, "y": 640 }
+      ]
+    }
+  },
   "care": {
     "wateringDurationSeconds": 5,
     "dryAfterSeconds": 10800,
@@ -11,6 +21,9 @@
     "groomBoostMultiplier": 1.2,
     "groomBoostSeconds": 3600,
     "collectionRange": 1.25
+  },
+  "crystals": {
+    "pickupValue": 1
   },
   "plants": {
     "star-fern": {

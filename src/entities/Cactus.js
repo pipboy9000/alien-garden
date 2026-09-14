@@ -7,22 +7,22 @@ import gameplayConfig from "../game/data/gameplay-config.json";
 
 const plantId = "crystal-cactus";
 
-export async function create(x, y) {
+export async function create(x, y, level = 1, onCrystalCollected) {
 
     let entity = await Entity.create(x, y, "Cactus");
     entity.tag = "plant";
 
     const config = gameplayConfig.plants[plantId];
-    const level = config.levels[0];
+    const levelConfig = config.levels[level - 1];
 
-    entity.setState(`level${level.level}`);
+    entity.setState(`level${levelConfig.level}`);
 
     registerSelectable(entity, {
         type: "plant",
         plantId,
         name: config.name,
-        level: level.level,
-        productionPerSecond: level.productionPerSecond,
+        level: levelConfig.level,
+        productionPerSecond: levelConfig.productionPerSecond,
         purchaseCost: config.purchaseCost
     });
 
@@ -33,7 +33,7 @@ export async function create(x, y) {
     entity.onUpdate = async (dt) => {
         if (!document.hasFocus() || document.hidden) return;
 
-        const dropRatePerSecond = level.crystalDropRatePerSecond;
+        const dropRatePerSecond = levelConfig.crystalDropRatePerSecond;
         if (!dropRatePerSecond) return;
 
         if (activeCrystalsCount >= maxCrystals) return;
@@ -44,8 +44,9 @@ export async function create(x, y) {
         if (dropTimerMs >= dropIntervalMs) {
             dropTimerMs -= dropIntervalMs;
             activeCrystalsCount++;
-            const crystal = await Crystal.create(entity.x, entity.y, () => {
+            const crystal = await Crystal.create(entity.x, entity.y, (collectedCrystal) => {
                 activeCrystalsCount = Math.max(0, activeCrystalsCount - 1);
+                onCrystalCollected?.(collectedCrystal);
             });
             addEntity(crystal);
         }

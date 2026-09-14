@@ -6,8 +6,13 @@ import { initSelectionSystem } from './game/systems/selection.js';
 import { initFloorNavigationSystem } from './game/systems/floorNavigation.js';
 import { plantCatalog, getBuyablePlantIds } from './game/data/plantCatalog.js';
 import { drawPlantThumbnail } from './game/ui/plantThumbnail.js';
+import { getSlotPosition, seedStarterSlots } from './game/systems/greenhouseSlots.js';
+import { applyOfflineProduction } from './game/systems/offlineProduction.js';
+import * as EmptyPot from './entities/EmptyPot.js';
 import gameplayConfig from './game/data/gameplay-config.json';
 import './style.css';
+
+const AUTOSAVE_INTERVAL_MS = 30_000;
 
 const statusElement = document.querySelector('#status');
 const crystalBalanceElement = document.querySelector('#crystal-balance');
@@ -25,6 +30,14 @@ let gameState = loadGameState();
 
 function renderHud() {
   crystalBalanceElement.textContent = String(gameState.crystals);
+}
+
+function collectCrystal() {
+  gameState = saveGameState({
+    ...gameState,
+    crystals: gameState.crystals + gameplayConfig.crystals.pickupValue
+  });
+  renderHud();
 }
 
 function renderPlantPopup(item) {
@@ -78,15 +91,27 @@ async function buyPlant(pot, plantId) {
   const catalogEntry = plantCatalog[plantId];
   if (!config || !catalogEntry || gameState.crystals < config.purchaseCost) return;
 
-  gameState = { ...gameState, crystals: gameState.crystals - config.purchaseCost };
+  const greenhouseState = gameState.greenhouses[starterGreenhouseId];
+  const plants = greenhouseState.plants.map((record) =>
+    record.slotId === pot.entity.slotId
+      ? { ...record, plantId, level: 1, plantedAt: Date.now(), wateredAt: Date.now(), alive: true }
+      : record
+  );
+
+  gameState = {
+    ...gameState,
+    crystals: gameState.crystals - config.purchaseCost,
+    greenhouses: { ...gameState.greenhouses, [starterGreenhouseId]: { ...greenhouseState, plants } }
+  };
   saveGameState(gameState);
   renderHud();
 
-  const { x, y } = pot.entity;
+  const { x, y, slotId } = pot.entity;
   unregisterSelectable(pot.entity);
   world.removeEntity(pot.entity);
 
-  const plantEntity = await catalogEntry.create(x, y);
+  const plantEntity = await catalogEntry.create(x, y, 1, collectCrystal);
+  plantEntity.slotId = slotId;
   world.addEntity(plantEntity);
 
   clearSelection();
@@ -107,8 +132,6 @@ buyPopupCloseButton.addEventListener('click', () => {
 
 
 async function boot() {
-  renderHud();
-
   await world.init({
     canvas: 'canvas',
     pixelation: 1,
@@ -123,9 +146,38 @@ async function boot() {
 
   clearSelectables();
   await world.loadLevel(starterGreenhouseId);
+
+  gameState.greenhouses[starterGreenhouseId] ??= { unlocked: true, plants: [] };
+  gameState.greenhouses[starterGreenhouseId] = seedStarterSlots(
+    gameState.greenhouses[starterGreenhouseId],
+    gameplayConfig,
+    starterGreenhouseId
+  );
+
+  const { gameState: caughtUpState, crystalsGained } = applyOfflineProduction(gameState, gameplayConfig);
+  gameState = caughtUpState;
+  gameState = saveGameState(gameState);
+  renderHud();
+
+  for (const record of gameState.greenhouses[starterGreenhouseId].plants) {
+    const slot = getSlotPosition(gameplayConfig, starterGreenhouseId, record.slotId);
+    if (!slot) continue;
+
+    const entity = record.plantId
+      ? await plantCatalog[record.plantId].create(slot.x, slot.y, record.level, collectCrystal)
+      : await EmptyPot.create(slot.x, slot.y);
+    entity.slotId = record.slotId;
+    world.addEntity(entity);
+  }
+
   initSelectionSystem();
   await initFloorNavigationSystem({ levelId: starterGreenhouseId, floorEntityName: 'Greenhouse1' });
-  statusElement.textContent = 'Starter greenhouse loaded. The garden is ready for its first plant.';
+  statusElement.textContent =
+    crystalsGained > 0
+      ? `Welcome back! Your garden produced ${Math.floor(crystalsGained)} crystals while you were away.`
+      : 'Starter greenhouse loaded. The garden is ready for its first plant.';
+
+  setInterval(() => saveGameState(gameState), AUTOSAVE_INTERVAL_MS);
 }
 
 resetSaveButton.addEventListener('click', () => {
