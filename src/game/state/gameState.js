@@ -1,10 +1,11 @@
 const SAVE_KEY = 'alien-garden:save';
 const SAVE_VERSION = 2;
+const STARTER_CRYSTALS = 200;
 
 function createDefaultGameState() {
   return {
     schemaVersion: SAVE_VERSION,
-    crystals: 0,
+    crystals: STARTER_CRYSTALS,
     globalUpgrades: {},
     lastVisitedGreenhouseId: 'greenhouse-01',
     lastSavedAt: Date.now(),

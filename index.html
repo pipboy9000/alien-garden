@@ -9,16 +9,17 @@
   <body>
     <main id="game-shell">
       <canvas id="canvas" aria-label="Alien Garden greenhouse"></canvas>
-      <section class="hud" aria-label="Garden status">
-        <p class="eyebrow">Alien Garden</p>
-        <h1>Starter greenhouse</h1>
-        <p id="status" role="status">Booting Chicken Fart Engine...</p>
-        <div class="balance-row">
-          <span>Crystals</span>
-          <strong id="crystal-balance">0</strong>
-        </div>
-        <button id="reset-save" type="button">Reset local garden</button>
-      </section>
+      <div class="stats-pill" aria-label="Garden status">
+        <span class="stats-pill-icon" aria-hidden="true">&#9670;</span>
+        <strong id="crystal-balance">0</strong>
+        <span id="crystal-rate" class="stats-pill-rate">+0.00/s</span>
+      </div>
+      <p id="status" class="status-toast" role="status">Booting Chicken Fart Engine...</p>
+      <button id="reset-save" class="reset-link" type="button">Reset local garden</button>
+      <button id="buy-pot-button" class="buy-pot-button" type="button">
+        <span class="buy-pot-icon" aria-hidden="true">&#127994;</span>
+        <span id="buy-pot-cost"></span>
+      </button>
       <section id="plant-popup" class="plant-popup" aria-label="Selected plant" hidden>
         <button id="plant-popup-close" class="plant-popup-close" type="button" aria-label="Close">&times;</button>
         <h2 id="plant-popup-name"></h2>

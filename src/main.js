@@ -6,17 +6,25 @@ import { initSelectionSystem } from './game/systems/selection.js';
 import { initFloorNavigationSystem } from './game/systems/floorNavigation.js';
 import { plantCatalog, getBuyablePlantIds } from './game/data/plantCatalog.js';
 import { drawPlantThumbnail } from './game/ui/plantThumbnail.js';
-import { getSlotPosition, seedStarterSlots } from './game/systems/greenhouseSlots.js';
+import {
+  getSlotPosition,
+  seedStarterSlots,
+  resolvePlantPosition,
+  getPotPurchaseConfig,
+  getNextPotCost
+} from './game/systems/greenhouseSlots.js';
 import { applyOfflineProduction } from './game/systems/offlineProduction.js';
-import { settleProduction } from './game/systems/production.js';
+import { settleProduction, getPlantProductionRate } from './game/systems/production.js';
 import * as EmptyPot from './entities/EmptyPot.js';
 import gameplayConfig from './game/data/gameplay-config.json';
 import './style.css';
 
 const AUTOSAVE_INTERVAL_MS = 30_000;
+const ACTIVE_PRODUCTION_INTERVAL_MS = 1_000;
 
 const statusElement = document.querySelector('#status');
 const crystalBalanceElement = document.querySelector('#crystal-balance');
+const crystalRateElement = document.querySelector('#crystal-rate');
 const resetSaveButton = document.querySelector('#reset-save');
 const plantPopupElement = document.querySelector('#plant-popup');
 const plantPopupCloseButton = document.querySelector('#plant-popup-close');
@@ -26,17 +34,55 @@ const plantPopupProductionElement = document.querySelector('#plant-popup-product
 const buyPopupElement = document.querySelector('#buy-popup');
 const buyPopupCloseButton = document.querySelector('#buy-popup-close');
 const buyPopupListElement = document.querySelector('#buy-popup-list');
+const buyPotButton = document.querySelector('#buy-pot-button');
+const buyPotCostElement = document.querySelector('#buy-pot-cost');
 const starterGreenhouseId = gameplayConfig.starterGreenhouseId;
 let gameState = loadGameState();
 
 function renderHud() {
-  crystalBalanceElement.textContent = String(gameState.crystals);
+  crystalBalanceElement.textContent = gameState.crystals.toFixed(2);
+
+  const greenhouseState = gameState.greenhouses[gameState.lastVisitedGreenhouseId];
+  const productionPerSecond = greenhouseState
+    ? greenhouseState.plants.reduce(
+        (total, record) => total + getPlantProductionRate(gameState, record, gameplayConfig),
+        0
+      )
+    : 0;
+  crystalRateElement.textContent = `+${productionPerSecond.toFixed(2)}/s`;
+}
+
+function settleActiveProduction() {
+  const result = settleProduction(gameState, gameplayConfig);
+  gameState = result.gameState;
+  renderHud();
+}
+
+function renderBuyPotButton() {
+  const potPurchase = getPotPurchaseConfig(gameplayConfig, starterGreenhouseId);
+  const greenhouseState = gameState.greenhouses[starterGreenhouseId];
+  if (!potPurchase || !greenhouseState) {
+    buyPotButton.hidden = true;
+    return;
+  }
+
+  const ownedPotCount = greenhouseState.plants.length;
+  if (ownedPotCount >= potPurchase.maxPots) {
+    buyPotButton.hidden = true;
+    return;
+  }
+
+  buyPotButton.hidden = false;
+  const cost = getNextPotCost(gameplayConfig, starterGreenhouseId, ownedPotCount);
+  buyPotCostElement.textContent = cost > 0 ? `${cost} crystals` : 'Free';
+  buyPotButton.disabled = gameState.crystals < cost;
 }
 
 function persistGameState() {
   gameState = settleProduction(gameState, gameplayConfig).gameState;
   gameState = saveGameState(gameState);
   renderHud();
+  renderBuyPotButton();
 }
 
 function collectCrystal() {
@@ -125,6 +171,43 @@ async function buyPlant(pot, plantId) {
   clearSelection();
 }
 
+async function buyPot() {
+  const potPurchase = getPotPurchaseConfig(gameplayConfig, starterGreenhouseId);
+  const greenhouseState = gameState.greenhouses[starterGreenhouseId];
+  if (!potPurchase || !greenhouseState) return;
+
+  const ownedPotCount = greenhouseState.plants.length;
+  if (ownedPotCount >= potPurchase.maxPots) return;
+
+  const cost = getNextPotCost(gameplayConfig, starterGreenhouseId, ownedPotCount);
+  if (cost == null || gameState.crystals < cost) return;
+
+  const player = world.getEntityByTag('player');
+  const x = (player?.x ?? 0) + 30;
+  const y = player?.y ?? 0;
+  const slotId = `pot-${Date.now()}`;
+
+  const plants = [
+    ...greenhouseState.plants,
+    { slotId, plantId: null, level: 1, plantedAt: null, wateredAt: null, alive: true, x, y }
+  ];
+
+  gameState = {
+    ...gameState,
+    crystals: gameState.crystals - cost,
+    greenhouses: { ...gameState.greenhouses, [starterGreenhouseId]: { ...greenhouseState, plants } }
+  };
+  persistGameState();
+
+  const entity = await EmptyPot.create(x, y);
+  entity.slotId = slotId;
+  world.addEntity(entity);
+}
+
+buyPotButton.addEventListener('click', () => {
+  buyPot().catch((error) => console.error(error));
+});
+
 onSelectionChange((item) => {
   renderPlantPopup(item);
   renderBuyPopup(item);
@@ -168,16 +251,17 @@ async function boot() {
   renderHud();
 
   for (const record of gameState.greenhouses[starterGreenhouseId].plants) {
-    const slot = getSlotPosition(gameplayConfig, starterGreenhouseId, record.slotId);
-    if (!slot) continue;
+    const position = resolvePlantPosition(record, gameplayConfig, starterGreenhouseId);
+    if (!position) continue;
 
     const entity = record.plantId
-      ? await plantCatalog[record.plantId].create(slot.x, slot.y, record.level, collectCrystal)
-      : await EmptyPot.create(slot.x, slot.y);
+      ? await plantCatalog[record.plantId].create(position.x, position.y, record.level, collectCrystal)
+      : await EmptyPot.create(position.x, position.y);
     entity.slotId = record.slotId;
     world.addEntity(entity);
   }
 
+  renderBuyPotButton();
   initSelectionSystem();
   await initFloorNavigationSystem({ levelId: starterGreenhouseId, floorEntityName: 'Greenhouse1' });
   statusElement.textContent =
@@ -185,6 +269,7 @@ async function boot() {
       ? `Welcome back! Your garden produced ${Math.floor(crystalsGained)} crystals while you were away.`
       : 'Starter greenhouse loaded. The garden is ready for its first plant.';
 
+  setInterval(settleActiveProduction, ACTIVE_PRODUCTION_INTERVAL_MS);
   setInterval(persistGameState, AUTOSAVE_INTERVAL_MS);
 }
 

@@ -37,62 +37,86 @@ body {
   /* image-rendering: pixelated; */
 }
 
-.hud {
+.stats-pill {
   position: absolute;
-  top: clamp(1rem, 4vw, 3rem);
-  left: clamp(1rem, 5vw, 5rem);
-  width: min(23rem, calc(100vw - 2rem));
-  padding: 1.25rem;
-  border: 1px solid rgba(239, 248, 223, 0.22);
-  background: rgba(20, 35, 31, 0.82);
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(0.5rem);
-}
-
-.eyebrow {
-  margin: 0 0 0.5rem;
-  color: #a8d58c;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-h1 {
-  margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
-  font-weight: 500;
-}
-
-#status {
-  min-height: 2.5rem;
-  margin: 0.75rem 0 1.25rem;
-  color: #c2d4bf;
-}
-
-.balance-row {
+  top: clamp(1rem, 4vw, 2rem);
+  left: clamp(1rem, 5vw, 2rem);
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(239, 248, 223, 0.16);
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(239, 248, 223, 0.22);
+  border-radius: 999px;
+  background: rgba(20, 35, 31, 0.82);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(0.5rem);
   font-family: 'DM Mono', monospace;
 }
 
-.balance-row strong {
+.stats-pill-icon {
   color: #f5d77b;
-  font-size: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.stats-pill strong {
+  color: #f5d77b;
+  font-size: 1.05rem;
   font-weight: 500;
+}
+
+.stats-pill-rate {
+  color: #a8d58c;
+  font-size: 0.8rem;
+}
+
+.status-toast {
+  position: absolute;
+  top: clamp(3.5rem, 9vw, 4.5rem);
+  left: clamp(1rem, 5vw, 2rem);
+  max-width: min(20rem, calc(100vw - 2rem));
+  margin: 0;
+  color: #c2d4bf;
+  font-size: 0.85rem;
+}
+
+.status-toast:empty {
+  display: none;
+}
+
+.reset-link {
+  position: absolute;
+  bottom: clamp(1rem, 4vw, 2rem);
+  left: clamp(1rem, 5vw, 2rem);
+}
+
+.buy-pot-button {
+  position: absolute;
+  bottom: clamp(1rem, 4vw, 2rem);
+  right: clamp(1rem, 5vw, 2rem);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'DM Mono', monospace;
+}
+
+.buy-pot-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #a8d58c;
+}
+
+.buy-pot-icon {
+  font-size: 1rem;
 }
 
 button {
-  width: 100%;
-  margin-top: 1.25rem;
-  padding: 0.7rem 0.9rem;
+  padding: 0.5rem 0.8rem;
   border: 1px solid #a8d58c;
+  border-radius: 999px;
   color: #14231f;
   background: #a8d58c;
   font: inherit;
+  font-size: 0.8rem;
   cursor: pointer;
 }
 

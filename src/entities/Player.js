@@ -94,6 +94,7 @@ export async function create(x, y) {
             vz = 0;
         }
 
+        setCamPos(entity.x, entity.y);
         setCamTarget(entity.x, entity.y);
 
         if (entity.z === 0) {
