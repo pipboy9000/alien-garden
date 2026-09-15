@@ -2,6 +2,7 @@ import { addEntity } from '@chickenfart/engine/world';
 import { mouse, mousePressed } from '@chickenfart/engine/input';
 import { getSelectables } from '../state/selectableRegistry.js';
 import { selectItem, clearSelection } from '../state/selectionState.js';
+import { getPlacementTarget } from '../state/placementState.js';
 
 export const SELECTION_RADIUS = 30;
 export const SELECTION_RADIUS_SQR = SELECTION_RADIUS * SELECTION_RADIUS;
@@ -41,7 +42,7 @@ export function initSelectionSystem() {
 
       hoverOverSelectable = closest;
 
-      if (mousePressed.left) {
+      if (mousePressed.left && !getPlacementTarget()) {
         if (closest) {
           selectItem({ ...closest.info, entity: closest.entity });
         } else {

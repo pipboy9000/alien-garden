@@ -4,6 +4,8 @@ import { onSelectionChange, clearSelection } from './game/state/selectionState.j
 import { clearSelectables, unregisterSelectable } from './game/state/selectableRegistry.js';
 import { initSelectionSystem } from './game/systems/selection.js';
 import { initFloorNavigationSystem } from './game/systems/floorNavigation.js';
+import { initPlacementSystem } from './game/systems/placement.js';
+import { startPlacement } from './game/state/placementState.js';
 import { plantCatalog, getBuyablePlantIds } from './game/data/plantCatalog.js';
 import { drawPlantThumbnail } from './game/ui/plantThumbnail.js';
 import {
@@ -31,6 +33,7 @@ const plantPopupCloseButton = document.querySelector('#plant-popup-close');
 const plantPopupNameElement = document.querySelector('#plant-popup-name');
 const plantPopupLevelElement = document.querySelector('#plant-popup-level');
 const plantPopupProductionElement = document.querySelector('#plant-popup-production');
+const plantPopupMoveButton = document.querySelector('#plant-popup-move');
 const buyPopupElement = document.querySelector('#buy-popup');
 const buyPopupCloseButton = document.querySelector('#buy-popup-close');
 const buyPopupListElement = document.querySelector('#buy-popup-list');
@@ -38,6 +41,7 @@ const buyPotButton = document.querySelector('#buy-pot-button');
 const buyPotCostElement = document.querySelector('#buy-pot-cost');
 const starterGreenhouseId = gameplayConfig.starterGreenhouseId;
 let gameState = loadGameState();
+let selectedPlantEntity = null;
 
 function renderHud() {
   crystalBalanceElement.textContent = gameState.crystals.toFixed(2);
@@ -96,6 +100,7 @@ function collectCrystal() {
 function renderPlantPopup(item) {
   const plant = item && item.type === 'plant' ? item : null;
   plantPopupElement.hidden = !plant;
+  selectedPlantEntity = plant ? plant.entity : null;
   if (!plant) return;
 
   plantPopupNameElement.textContent = plant.name;
@@ -208,6 +213,27 @@ buyPotButton.addEventListener('click', () => {
   buyPot().catch((error) => console.error(error));
 });
 
+function relocatePlant(slotId, x, y) {
+  const greenhouseState = gameState.greenhouses[starterGreenhouseId];
+  const plants = greenhouseState.plants.map((record) =>
+    record.slotId === slotId ? { ...record, x, y } : record
+  );
+
+  gameState = {
+    ...gameState,
+    greenhouses: { ...gameState.greenhouses, [starterGreenhouseId]: { ...greenhouseState, plants } }
+  };
+  persistGameState();
+  statusElement.textContent = 'Plant moved.';
+}
+
+plantPopupMoveButton.addEventListener('click', () => {
+  if (!selectedPlantEntity) return;
+  startPlacement(selectedPlantEntity, selectedPlantEntity.slotId);
+  clearSelection();
+  statusElement.textContent = 'Click somewhere on the greenhouse floor to place the plant (Esc to cancel).';
+});
+
 onSelectionChange((item) => {
   renderPlantPopup(item);
   renderBuyPopup(item);
@@ -264,6 +290,12 @@ async function boot() {
   renderBuyPotButton();
   initSelectionSystem();
   await initFloorNavigationSystem({ levelId: starterGreenhouseId, floorEntityName: 'Greenhouse1' });
+  initPlacementSystem({
+    onPlace: (target, x, y) => relocatePlant(target.slotId, x, y),
+    onCancel: () => {
+      statusElement.textContent = 'Move cancelled.';
+    }
+  });
   statusElement.textContent =
     crystalsGained > 0
       ? `Welcome back! Your garden produced ${Math.floor(crystalsGained)} crystals while you were away.`

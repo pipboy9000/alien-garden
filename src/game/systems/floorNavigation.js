@@ -2,9 +2,17 @@ import { addEntity, getEntityByTag } from '@chickenfart/engine/world';
 import { mouse, mousePressed } from '@chickenfart/engine/input';
 import { isPointInEntityCollision } from '@chickenfart/engine/collision';
 import { setWalkTarget, getWalkTarget } from '../state/navigationState.js';
+import { getPlacementTarget } from '../state/placementState.js';
 import { hoverOverSelectable } from './selection.js';
 
 const MARKER_RADIUS = 6;
+
+let floorShape = null;
+
+// Shared with the placement system so it can validate drop points against the same floor bounds.
+export function isPointOnFloor(x, y) {
+  return floorShape ? isPointInEntityCollision(floorShape, x, y) : false;
+}
 
 // The engine treats floor items (like the greenhouse background) as pure background
 // decoration: it never registers their collision shape for hit-testing. So we resolve
@@ -27,7 +35,7 @@ async function loadFloorShape(levelId, floorEntityName) {
 }
 
 export async function initFloorNavigationSystem({ levelId, floorEntityName }) {
-  const floorShape = await loadFloorShape(levelId, floorEntityName);
+  floorShape = await loadFloorShape(levelId, floorEntityName);
   if (!floorShape) {
     console.warn(`Floor navigation: no collision found for "${floorEntityName}", click-to-walk disabled.`);
     return;
@@ -63,6 +71,7 @@ export async function initFloorNavigationSystem({ levelId, floorEntityName }) {
     },
     update() {
       if (!mousePressed.left) return;
+      if (getPlacementTarget()) return;
       if (hoverOverSelectable) return;
       if (!isPointInEntityCollision(floorShape, mouse.worldX, mouse.worldY)) return;
 
