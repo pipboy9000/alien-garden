@@ -182,8 +182,8 @@ async function buyPlant(plantId) {
   if (gameState.crystals < cost) return;
 
   const player = world.getEntityByTag('player');
-  const x = (player?.x ?? 0) + 30;
-  const y = player?.y ?? 0;
+  const x = (player?.x ?? 0) + 60;
+  const y = (player?.y ?? 0) - 30;
   const slotId = `plant-${Date.now()}`;
 
   const plants = [

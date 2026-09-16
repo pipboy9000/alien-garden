@@ -1,5 +1,5 @@
 import { Entity } from "@chickenfart/engine/entitiesFactory";
-import { addEntity } from "@chickenfart/engine/world";
+import { addEntity, removeEntity } from "@chickenfart/engine/world";
 import { registerSelectable } from "../game/state/selectableRegistry.js";
 import { isSelectableHovered } from "../game/systems/selection.js";
 import { getSelectedItem } from "../game/state/selectionState.js";
@@ -27,7 +27,7 @@ export async function create(x, y, level = 1, onCrystalCollected, getProductionR
     let ps = new ParticleSystem(40);
     ps.gravity = 0;
     ps.speed = 0.15;
-    ps.delay = 175;
+    ps.delay = 400;
     ps.maxParticleAge = 100;
     ps.on = true;
     ps.speed = 0.01;
@@ -163,9 +163,11 @@ export async function create(x, y, level = 1, onCrystalCollected, getProductionR
                 // Draw logic for default cactus state
                 break;
         }
-
-
     }
+
+    entity.onRemove = () => {
+       removeEntity(ps);
+    };
 
     return entity;
 }
