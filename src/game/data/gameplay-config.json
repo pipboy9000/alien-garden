@@ -56,7 +56,24 @@
           "level": 1,
           "productionPerSecond": 1.1,
           "crystalDropRatePerSecond": 0.5,
-          "upgradeCost": 120
+          "upgradeCost": 450
+        },
+        {
+          "level": 2,
+          "productionPerSecond": 2.2,
+          "crystalDropRatePerSecond": 0.8,
+          "upgradeCost": 1500
+        },
+        {
+          "level": 3,
+          "productionPerSecond": 4,
+          "crystalDropRatePerSecond": 1.2,
+          "upgradeCost": 4500
+        },
+        {
+          "level": 4,
+          "productionPerSecond": 7,
+          "crystalDropRatePerSecond": 1.8
         }
       ]
     }

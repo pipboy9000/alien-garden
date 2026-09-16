@@ -190,6 +190,68 @@ button:focus-visible {
   margin-top: 1rem;
 }
 
+.plant-popup-upgrade {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.6rem;
+  border: 1px solid rgba(239, 248, 223, 0.22);
+  background: rgba(239, 248, 223, 0.06);
+}
+
+.plant-popup-upgrade-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.plant-popup-upgrade-thumb {
+  display: block;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 4.5rem;
+  image-rendering: pixelated;
+}
+
+.plant-popup-upgrade-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.plant-popup-upgrade-label {
+  color: #a8d58c;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.plant-popup-upgrade-production {
+  color: #f5d77b;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.plant-popup-upgrade-button {
+  flex-shrink: 0;
+}
+
+.plant-popup-upgrade-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #a8d58c;
+}
+
+.plant-popup-upgrade--maxed .plant-popup-upgrade-thumb,
+.plant-popup-upgrade--maxed .plant-popup-upgrade-label {
+  opacity: 0.6;
+}
+
 .buy-popup-list {
   display: grid;
   gap: 0.75rem;

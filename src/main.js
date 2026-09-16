@@ -1,6 +1,6 @@
 import * as world from '@chickenfart/engine/world';
 import { loadGameState, resetGameState, saveGameState } from './game/state/gameState.js';
-import { onSelectionChange, clearSelection } from './game/state/selectionState.js';
+import { onSelectionChange, clearSelection, getSelectedItem } from './game/state/selectionState.js';
 import { clearSelectables, unregisterSelectable } from './game/state/selectableRegistry.js';
 import { initSelectionSystem } from './game/systems/selection.js';
 import { initFloorNavigationSystem } from './game/systems/floorNavigation.js';
@@ -33,6 +33,10 @@ const plantPopupCloseButton = document.querySelector('#plant-popup-close');
 const plantPopupNameElement = document.querySelector('#plant-popup-name');
 const plantPopupLevelElement = document.querySelector('#plant-popup-level');
 const plantPopupProductionElement = document.querySelector('#plant-popup-production');
+const plantPopupUpgradeElement = document.querySelector('#plant-popup-upgrade');
+const plantPopupUpgradeThumbElement = document.querySelector('#plant-popup-upgrade-thumb');
+const plantPopupUpgradeProductionElement = document.querySelector('#plant-popup-upgrade-production');
+const plantPopupUpgradeButton = document.querySelector('#plant-popup-upgrade-button');
 const plantPopupMoveButton = document.querySelector('#plant-popup-move');
 const buyPopupElement = document.querySelector('#buy-popup');
 const buyPopupCloseButton = document.querySelector('#buy-popup-close');
@@ -103,9 +107,38 @@ function renderPlantPopup(item) {
   selectedPlantEntity = plant ? plant.entity : null;
   if (!plant) return;
 
-  plantPopupNameElement.textContent = plant.name;
-  plantPopupLevelElement.textContent = String(plant.level);
-  plantPopupProductionElement.textContent = `${plant.productionPerSecond}/sec`;
+  // Re-read from gameState (not the stale selection snapshot) so post-upgrade values stay correct.
+  const greenhouseState = gameState.greenhouses[starterGreenhouseId];
+  const record = greenhouseState.plants.find((r) => r.slotId === plant.entity.slotId);
+  const config = gameplayConfig.plants[plant.plantId];
+  const levelConfig = config.levels[record.level - 1];
+
+  plantPopupNameElement.textContent = config.name;
+  plantPopupLevelElement.textContent = String(record.level);
+  plantPopupProductionElement.textContent = `${levelConfig.productionPerSecond}/sec`;
+
+  renderPlantUpgradeSection(plant.plantId, config, record, levelConfig);
+}
+
+function renderPlantUpgradeSection(plantId, config, record, levelConfig) {
+  const nextLevelConfig = config.levels[record.level];
+
+  if (!nextLevelConfig || !levelConfig.upgradeCost) {
+    plantPopupUpgradeElement.classList.add('plant-popup-upgrade--maxed');
+    plantPopupUpgradeThumbElement.hidden = true;
+    plantPopupUpgradeProductionElement.textContent = 'Max level reached';
+    plantPopupUpgradeButton.hidden = true;
+    return;
+  }
+
+  plantPopupUpgradeElement.classList.remove('plant-popup-upgrade--maxed');
+  plantPopupUpgradeThumbElement.hidden = false;
+  drawPlantThumbnail(plantPopupUpgradeThumbElement, plantId, nextLevelConfig.level);
+  plantPopupUpgradeProductionElement.textContent = `${nextLevelConfig.productionPerSecond}/sec`;
+
+  plantPopupUpgradeButton.hidden = false;
+  plantPopupUpgradeButton.disabled = gameState.crystals < levelConfig.upgradeCost;
+  plantPopupUpgradeButton.textContent = `Upgrade to Lv.${nextLevelConfig.level} — ${levelConfig.upgradeCost} crystals`;
 }
 
 function renderBuyPopup(item) {
@@ -144,6 +177,17 @@ function renderBuyPopup(item) {
   }
 }
 
+function findPlantRecord(slotId) {
+  return gameState.greenhouses[starterGreenhouseId]?.plants.find((record) => record.slotId === slotId);
+}
+
+function makeProductionRateGetter(slotId) {
+  return () => {
+    const record = findPlantRecord(slotId);
+    return record ? getPlantProductionRate(gameState, record, gameplayConfig) : 0;
+  };
+}
+
 async function buyPlant(pot, plantId) {
   persistGameState();
 
@@ -169,7 +213,7 @@ async function buyPlant(pot, plantId) {
   unregisterSelectable(pot.entity);
   world.removeEntity(pot.entity);
 
-  const plantEntity = await catalogEntry.create(x, y, 1, collectCrystal);
+  const plantEntity = await catalogEntry.create(x, y, 1, collectCrystal, makeProductionRateGetter(slotId));
   plantEntity.slotId = slotId;
   world.addEntity(plantEntity);
 
@@ -211,6 +255,38 @@ async function buyPot() {
 
 buyPotButton.addEventListener('click', () => {
   buyPot().catch((error) => console.error(error));
+});
+
+function upgradePlant() {
+  if (!selectedPlantEntity) return;
+
+  const greenhouseState = gameState.greenhouses[starterGreenhouseId];
+  const record = greenhouseState.plants.find((r) => r.slotId === selectedPlantEntity.slotId);
+  if (!record || !record.plantId || !record.alive) return;
+
+  const config = gameplayConfig.plants[record.plantId];
+  const levelConfig = config.levels[record.level - 1];
+  const nextLevelConfig = config.levels[record.level];
+  if (!nextLevelConfig || !levelConfig.upgradeCost || gameState.crystals < levelConfig.upgradeCost) return;
+
+  const plants = greenhouseState.plants.map((r) =>
+    r.slotId === record.slotId ? { ...r, level: nextLevelConfig.level } : r
+  );
+
+  gameState = {
+    ...gameState,
+    crystals: gameState.crystals - levelConfig.upgradeCost,
+    greenhouses: { ...gameState.greenhouses, [starterGreenhouseId]: { ...greenhouseState, plants } }
+  };
+  persistGameState();
+
+  selectedPlantEntity.setLevel?.(nextLevelConfig.level);
+  renderPlantPopup(getSelectedItem());
+  statusElement.textContent = `${config.name} upgraded to level ${nextLevelConfig.level}.`;
+}
+
+plantPopupUpgradeButton.addEventListener('click', () => {
+  upgradePlant();
 });
 
 function relocatePlant(slotId, x, y) {
@@ -281,7 +357,7 @@ async function boot() {
     if (!position) continue;
 
     const entity = record.plantId
-      ? await plantCatalog[record.plantId].create(position.x, position.y, record.level, collectCrystal)
+      ? await plantCatalog[record.plantId].create(position.x, position.y, record.level, collectCrystal, makeProductionRateGetter(record.slotId))
       : await EmptyPot.create(position.x, position.y);
     entity.slotId = record.slotId;
     world.addEntity(entity);

@@ -2,18 +2,28 @@ import { Entity } from "@chickenfart/engine/entitiesFactory";
 import { addEntity } from "@chickenfart/engine/world";
 import { registerSelectable } from "../game/state/selectableRegistry.js";
 import { isSelectableHovered } from "../game/systems/selection.js";
+import { getSelectedItem } from "../game/state/selectionState.js";
 import * as Crystal from "./Crystal.js";
+import * as FloatingNumber from "./FloatingNumber.js";
 import gameplayConfig from "../game/data/gameplay-config.json";
 
 const plantId = "crystal-cactus";
 
-export async function create(x, y, level = 1, onCrystalCollected) {
+// Cosmetic wallet-pulse timing, randomized per plant so multiple plants don't pulse in sync.
+const PULSE_MIN_SECONDS = 2.5;
+const PULSE_MAX_SECONDS = 4.5;
+
+function randomPulseIntervalMs() {
+    return (PULSE_MIN_SECONDS + Math.random() * (PULSE_MAX_SECONDS - PULSE_MIN_SECONDS)) * 1000;
+}
+
+export async function create(x, y, level = 1, onCrystalCollected, getProductionRate) {
 
     let entity = await Entity.create(x, y, "Cactus");
     entity.tag = "plant";
 
     const config = gameplayConfig.plants[plantId];
-    const levelConfig = config.levels[level - 1];
+    let levelConfig = config.levels[level - 1];
 
     entity.setState(`level${levelConfig.level}`);
 
@@ -26,12 +36,36 @@ export async function create(x, y, level = 1, onCrystalCollected) {
         purchaseCost: config.purchaseCost
     });
 
+    // Called by main.js after a paid level-up; re-reads the config so drop rate/sprite state update live.
+    entity.setLevel = (newLevel) => {
+        levelConfig = config.levels[newLevel - 1];
+        entity.setState(`level${levelConfig.level}`);
+    };
+
     let dropTimerMs = 0;
     let activeCrystalsCount = 0;
     const maxCrystals = config.pendingCapacity ?? 50;
 
+    let pulseTimerMs = 0;
+    let pulseIntervalMs = randomPulseIntervalMs();
+
     entity.onUpdate = async (dt) => {
         if (!document.hasFocus() || document.hidden) return;
+
+        pulseTimerMs += dt;
+        if (pulseTimerMs >= pulseIntervalMs) {
+            const elapsedSeconds = pulseTimerMs / 1000;
+            pulseTimerMs = 0;
+            pulseIntervalMs = randomPulseIntervalMs();
+
+            const ratePerSecond = getProductionRate?.() ?? levelConfig.productionPerSecond;
+            const amount = ratePerSecond * elapsedSeconds;
+            if (amount > 0) {
+                entity.flash(300, "yellow");
+                const label = await FloatingNumber.create(entity.x, entity.y - 60, `+${amount.toFixed(1)}`);
+                addEntity(label);
+            }
+        }
 
         const dropRatePerSecond = levelConfig.crystalDropRatePerSecond;
         if (!dropRatePerSecond) return;
@@ -55,9 +89,15 @@ export async function create(x, y, level = 1, onCrystalCollected) {
     entity.onDrawBehind = (ctx) => {
         if (isSelectableHovered(entity)) {
             ctx.beginPath();
+            ctx.fillStyle = "#44ff44cc";
+            ctx.lineWidth = 2;
+            ctx.ellipse(entity.x, entity.y, 50, 25, 0, 0, 2 * Math.PI);
+            ctx.fill();
+        } else if (getSelectedItem()?.entity === entity) {
+            ctx.beginPath();
             ctx.fillStyle = "#44ff4488";
             ctx.lineWidth = 2;
-            ctx.ellipse(entity.x, entity.y, 25, 12.5, 0, 0, 2 * Math.PI);
+            ctx.ellipse(entity.x, entity.y, 50, 25, 0, 0, 2 * Math.PI);
             ctx.fill();
         }
     };
