@@ -1,5 +1,5 @@
 // Ephemeral UI selection state: not persisted, separate from the saved gameState.
-// The selected item's `info` shape varies by `type` (e.g. "plant", "empty-pot").
+// The selected item's `info` shape varies by `type` (e.g. "plant").
 let selectedItem = null;
 const listeners = new Set();
 

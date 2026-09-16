@@ -6,16 +6,8 @@
   },
   "greenhouses": {
     "greenhouse-01": {
-      "starterSlotIds": ["slot-1"],
-      "slots": [
-        { "id": "slot-1", "x": 1016, "y": 561 },
-        { "id": "slot-2", "x": 929, "y": 576 },
-        { "id": "slot-3", "x": 819, "y": 640 }
-      ],
-      "potPurchase": {
-        "maxPots": 8,
-        "potCosts": [0, 5000, 25000, 75000, 200000, 500000, 1200000, 3000000]
-      }
+      "maxPlants": 8,
+      "plantCostMultiplier": 15
     }
   },
   "care": {
@@ -47,7 +39,7 @@
     },
     "crystal-cactus": {
       "name": "Crystal Cactus",
-      "purchaseCost": 120,
+      "purchaseCost": 200,
       "waterIntervalSeconds": 10800,
       "deathAfterDrySeconds": 259200,
       "pendingCapacity": 50,

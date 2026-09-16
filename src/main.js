@@ -8,16 +8,9 @@ import { initPlacementSystem } from './game/systems/placement.js';
 import { startPlacement } from './game/state/placementState.js';
 import { plantCatalog, getBuyablePlantIds } from './game/data/plantCatalog.js';
 import { drawPlantThumbnail } from './game/ui/plantThumbnail.js';
-import {
-  getSlotPosition,
-  seedStarterSlots,
-  resolvePlantPosition,
-  getPotPurchaseConfig,
-  getNextPotCost
-} from './game/systems/greenhouseSlots.js';
+import { resolvePlantPosition, getMaxPlants, getPlantPurchaseCost } from './game/systems/greenhouseSlots.js';
 import { applyOfflineProduction } from './game/systems/offlineProduction.js';
 import { settleProduction, getPlantProductionRate } from './game/systems/production.js';
-import * as EmptyPot from './entities/EmptyPot.js';
 import gameplayConfig from './game/data/gameplay-config.json';
 import './style.css';
 
@@ -42,10 +35,11 @@ const buyPopupElement = document.querySelector('#buy-popup');
 const buyPopupCloseButton = document.querySelector('#buy-popup-close');
 const buyPopupListElement = document.querySelector('#buy-popup-list');
 const buyPotButton = document.querySelector('#buy-pot-button');
-const buyPotCostElement = document.querySelector('#buy-pot-cost');
 const starterGreenhouseId = gameplayConfig.starterGreenhouseId;
 let gameState = loadGameState();
 let selectedPlantEntity = null;
+// Every currently-spawned plant entity, so a reset can remove them from the world too.
+let plantEntities = [];
 
 function renderHud() {
   crystalBalanceElement.textContent = gameState.crystals.toFixed(2);
@@ -67,23 +61,9 @@ function settleActiveProduction() {
 }
 
 function renderBuyPotButton() {
-  const potPurchase = getPotPurchaseConfig(gameplayConfig, starterGreenhouseId);
   const greenhouseState = gameState.greenhouses[starterGreenhouseId];
-  if (!potPurchase || !greenhouseState) {
-    buyPotButton.hidden = true;
-    return;
-  }
-
-  const ownedPotCount = greenhouseState.plants.length;
-  if (ownedPotCount >= potPurchase.maxPots) {
-    buyPotButton.hidden = true;
-    return;
-  }
-
-  buyPotButton.hidden = false;
-  const cost = getNextPotCost(gameplayConfig, starterGreenhouseId, ownedPotCount);
-  buyPotCostElement.textContent = cost > 0 ? `${cost} crystals` : 'Free';
-  buyPotButton.disabled = gameState.crystals < cost;
+  const maxPlants = getMaxPlants(gameplayConfig, starterGreenhouseId);
+  buyPotButton.hidden = !greenhouseState || greenhouseState.plants.length >= maxPlants;
 }
 
 function persistGameState() {
@@ -142,22 +122,22 @@ function renderPlantUpgradeSection(plantId, config, record, levelConfig) {
   plantPopupUpgradeButton.textContent = `Upgrade to Lv.${nextLevelConfig.level} — ${levelConfig.upgradeCost} crystals`;
 }
 
-function renderBuyPopup(item) {
-  const pot = item && item.type === 'empty-pot' ? item : null;
-  buyPopupElement.hidden = !pot;
+function renderBuyPopup() {
   buyPopupListElement.innerHTML = '';
-  if (!pot) return;
+
+  const ownedPlantsCount = gameState.greenhouses[starterGreenhouseId]?.plants.length ?? 0;
 
   for (const plantId of getBuyablePlantIds()) {
     const config = gameplayConfig.plants[plantId];
     const catalogEntry = plantCatalog[plantId];
-    const affordable = gameState.crystals >= config.purchaseCost;
+    const cost = getPlantPurchaseCost(gameplayConfig, starterGreenhouseId, config, ownedPlantsCount);
+    const affordable = gameState.crystals >= cost;
 
     const option = document.createElement('button');
     option.type = 'button';
     option.className = 'buy-option';
     option.disabled = !affordable;
-    option.addEventListener('click', () => buyPlant(pot, plantId));
+    option.addEventListener('click', () => buyPlant(plantId));
 
     const thumb = document.createElement('canvas');
     thumb.className = 'buy-option-thumb';
@@ -169,11 +149,11 @@ function renderBuyPopup(item) {
     name.className = 'buy-option-name';
     name.textContent = config.name;
 
-    const cost = document.createElement('span');
-    cost.className = 'buy-option-cost';
-    cost.textContent = `${config.purchaseCost} crystals`;
+    const costElement = document.createElement('span');
+    costElement.className = 'buy-option-cost';
+    costElement.textContent = `${cost} crystals`;
 
-    option.append(thumb, name, cost);
+    option.append(thumb, name, costElement);
     buyPopupListElement.appendChild(option);
   }
 }
@@ -189,57 +169,26 @@ function makeProductionRateGetter(slotId) {
   };
 }
 
-async function buyPlant(pot, plantId) {
-  persistGameState();
-
+async function buyPlant(plantId) {
   const config = gameplayConfig.plants[plantId];
   const catalogEntry = plantCatalog[plantId];
-  if (!config || !catalogEntry || gameState.crystals < config.purchaseCost) return;
+  if (!config || !catalogEntry) return;
 
   const greenhouseState = gameState.greenhouses[starterGreenhouseId];
-  const plants = greenhouseState.plants.map((record) =>
-    record.slotId === pot.entity.slotId
-      ? { ...record, plantId, level: 1, plantedAt: Date.now(), wateredAt: Date.now(), alive: true }
-      : record
-  );
+  const maxPlants = getMaxPlants(gameplayConfig, starterGreenhouseId);
+  if (greenhouseState.plants.length >= maxPlants) return;
 
-  gameState = {
-    ...gameState,
-    crystals: gameState.crystals - config.purchaseCost,
-    greenhouses: { ...gameState.greenhouses, [starterGreenhouseId]: { ...greenhouseState, plants } }
-  };
-  persistGameState();
-
-  const { x, y, slotId } = pot.entity;
-  unregisterSelectable(pot.entity);
-  world.removeEntity(pot.entity);
-
-  const plantEntity = await catalogEntry.create(x, y, 1, collectCrystal, makeProductionRateGetter(slotId));
-  plantEntity.slotId = slotId;
-  world.addEntity(plantEntity);
-
-  clearSelection();
-}
-
-async function buyPot() {
-  const potPurchase = getPotPurchaseConfig(gameplayConfig, starterGreenhouseId);
-  const greenhouseState = gameState.greenhouses[starterGreenhouseId];
-  if (!potPurchase || !greenhouseState) return;
-
-  const ownedPotCount = greenhouseState.plants.length;
-  if (ownedPotCount >= potPurchase.maxPots) return;
-
-  const cost = getNextPotCost(gameplayConfig, starterGreenhouseId, ownedPotCount);
-  if (cost == null || gameState.crystals < cost) return;
+  const cost = getPlantPurchaseCost(gameplayConfig, starterGreenhouseId, config, greenhouseState.plants.length);
+  if (gameState.crystals < cost) return;
 
   const player = world.getEntityByTag('player');
   const x = (player?.x ?? 0) + 30;
   const y = player?.y ?? 0;
-  const slotId = `pot-${Date.now()}`;
+  const slotId = `plant-${Date.now()}`;
 
   const plants = [
     ...greenhouseState.plants,
-    { slotId, plantId: null, level: 1, plantedAt: null, wateredAt: null, alive: true, x, y }
+    { slotId, plantId, level: 1, plantedAt: Date.now(), wateredAt: Date.now(), alive: true, x, y }
   ];
 
   gameState = {
@@ -249,13 +198,21 @@ async function buyPot() {
   };
   persistGameState();
 
-  const entity = await EmptyPot.create(x, y);
-  entity.slotId = slotId;
-  world.addEntity(entity);
+  const plantEntity = await catalogEntry.create(x, y, 1, collectCrystal, makeProductionRateGetter(slotId));
+  plantEntity.slotId = slotId;
+  world.addEntity(plantEntity);
+  plantEntities.push(plantEntity);
+
+  buyPopupElement.hidden = true;
+}
+
+function openBuyPopup() {
+  renderBuyPopup();
+  buyPopupElement.hidden = false;
 }
 
 buyPotButton.addEventListener('click', () => {
-  buyPot().catch((error) => console.error(error));
+  openBuyPopup();
 });
 
 function upgradePlant() {
@@ -313,7 +270,6 @@ plantPopupMoveButton.addEventListener('click', () => {
 
 onSelectionChange((item) => {
   renderPlantPopup(item);
-  renderBuyPopup(item);
 });
 
 plantPopupCloseButton.addEventListener('click', () => {
@@ -321,7 +277,7 @@ plantPopupCloseButton.addEventListener('click', () => {
 });
 
 buyPopupCloseButton.addEventListener('click', () => {
-  clearSelection();
+  buyPopupElement.hidden = true;
 });
 
 
@@ -342,11 +298,6 @@ async function boot() {
   await world.loadLevel(starterGreenhouseId);
 
   gameState.greenhouses[starterGreenhouseId] ??= { unlocked: true, plants: [] };
-  gameState.greenhouses[starterGreenhouseId] = seedStarterSlots(
-    gameState.greenhouses[starterGreenhouseId],
-    gameplayConfig,
-    starterGreenhouseId
-  );
 
   const { gameState: caughtUpState, crystalsGained } = applyOfflineProduction(gameState, gameplayConfig);
   gameState = caughtUpState;
@@ -354,14 +305,14 @@ async function boot() {
   renderHud();
 
   for (const record of gameState.greenhouses[starterGreenhouseId].plants) {
-    const position = resolvePlantPosition(record, gameplayConfig, starterGreenhouseId);
+    if (!record.plantId) continue;
+    const position = resolvePlantPosition(record);
     if (!position) continue;
 
-    const entity = record.plantId
-      ? await plantCatalog[record.plantId].create(position.x, position.y, record.level, collectCrystal, makeProductionRateGetter(record.slotId))
-      : await EmptyPot.create(position.x, position.y);
+    const entity = await plantCatalog[record.plantId].create(position.x, position.y, record.level, collectCrystal, makeProductionRateGetter(record.slotId));
     entity.slotId = record.slotId;
     world.addEntity(entity);
+    plantEntities.push(entity);
   }
 
   renderBuyPotButton();
@@ -382,7 +333,18 @@ async function boot() {
   setInterval(persistGameState, AUTOSAVE_INTERVAL_MS);
 }
 
+function removeAllPlantEntities() {
+  for (const entity of plantEntities) {
+    unregisterSelectable(entity);
+    world.removeEntity(entity);
+  }
+  plantEntities = [];
+}
+
 resetSaveButton.addEventListener('click', () => {
+  removeAllPlantEntities();
+  clearSelection();
+  buyPopupElement.hidden = true;
   gameState = resetGameState();
   persistGameState();
   statusElement.textContent = 'Local garden reset.';
