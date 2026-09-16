@@ -6,6 +6,7 @@ import { getSelectedItem } from "../game/state/selectionState.js";
 import * as Crystal from "./Crystal.js";
 import * as FloatingNumber from "./FloatingNumber.js";
 import gameplayConfig from "../game/data/gameplay-config.json";
+import { ParticleSystem } from "@chickenfart/engine";
 
 const plantId = "crystal-cactus";
 
@@ -21,6 +22,36 @@ export async function create(x, y, level = 1, onCrystalCollected, getProductionR
 
     let entity = await Entity.create(x, y, "Cactus");
     entity.tag = "plant";
+
+    //particle system for the cactus
+    let ps = new ParticleSystem(40);
+    ps.gravity = 0;
+    ps.speed = 0.15;
+    ps.delay = 175;
+    ps.maxParticleAge = 100;
+    ps.on = true;
+    ps.speed = 0.01;
+    ps.gravity = 0;
+    ps.maxParticleAge = 100;
+    ps.onParticleSpawn = (particle) => {
+        particle.z = -60;
+        particle.x = entity.x + (Math.random() - 0.5) * 60;
+        particle.y = entity.y + (Math.random() - 0.5) * 60;
+        particle.vx = 0;
+        particle.vy = 0;
+        particle.vz = -20;
+    };
+    ps.onDrawParticle = (ctx, particle) => {
+        // ctx.fillStyle = "#44ff44cc";
+        ctx.beginPath();
+        const radialGradient = ctx.createRadialGradient(particle.x, particle.y + particle.z, 0, particle.x, particle.y + particle.z, 4);
+        radialGradient.addColorStop(0, "#ffffffcc");
+        radialGradient.addColorStop(1, "#ff44ff00");
+        ctx.fillStyle = radialGradient;
+        ctx.arc(particle.x, particle.y + particle.z, 4, 0, 2 * Math.PI);
+        ctx.fill();
+    };
+    addEntity(ps);
 
     const config = gameplayConfig.plants[plantId];
     let levelConfig = config.levels[level - 1];
@@ -52,6 +83,9 @@ export async function create(x, y, level = 1, onCrystalCollected, getProductionR
     entity.onUpdate = async (dt) => {
         if (!document.hasFocus() || document.hidden) return;
 
+        ps.x = entity.x;
+        ps.y = entity.y + 1;
+
         pulseTimerMs += dt;
         if (pulseTimerMs >= pulseIntervalMs) {
             const elapsedSeconds = pulseTimerMs / 1000;
@@ -61,8 +95,8 @@ export async function create(x, y, level = 1, onCrystalCollected, getProductionR
             const ratePerSecond = getProductionRate?.() ?? levelConfig.productionPerSecond;
             const amount = ratePerSecond * elapsedSeconds;
             if (amount > 0) {
-                entity.flash(300, "yellow");
-                const label = await FloatingNumber.create(entity.x, entity.y - 60, `+${amount.toFixed(1)}`);
+                entity.flash(200, "purple");
+                const label = await FloatingNumber.create(entity.x, entity.y + 1, `+${amount.toFixed(1)}`);
                 addEntity(label);
             }
         }
@@ -103,7 +137,7 @@ export async function create(x, y, level = 1, onCrystalCollected, getProductionR
     };
 
     entity.onDraw = (ctx) => {
-    
+
         switch (entity.currState) {
             case 'level1':
                 // Draw logic for level 1 cactus
@@ -129,7 +163,7 @@ export async function create(x, y, level = 1, onCrystalCollected, getProductionR
                 break;
         }
 
-    
+
     }
 
     return entity;
