@@ -96,7 +96,8 @@ function persistGameState() {
 function collectCrystal() {
   gameState = {
     ...gameState,
-    crystals: gameState.crystals + gameplayConfig.crystals.pickupValue
+    crystals: gameState.crystals + gameplayConfig.crystals.pickupValue,
+    totalCollectedCrystals: gameState.totalCollectedCrystals + gameplayConfig.crystals.pickupValue
   };
   persistGameState();
 }

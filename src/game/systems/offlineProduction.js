@@ -35,6 +35,7 @@ export function applyOfflineProduction(gameState, gameplayConfig, now = Date.now
   const nextGameState = {
     ...gameState,
     crystals: gameState.crystals + crystalsGained,
+    totalCollectedCrystals: gameState.totalCollectedCrystals + crystalsGained,
     lastProductionSettledAt: now,
     greenhouses: {
       ...gameState.greenhouses,

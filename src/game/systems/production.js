@@ -54,6 +54,7 @@ export function settleProduction(gameState, gameplayConfig, now = Date.now()) {
     gameState: {
       ...gameState,
       crystals: gameState.crystals + crystalsGained,
+      totalCollectedCrystals: gameState.totalCollectedCrystals + crystalsGained,
       lastProductionSettledAt: now
     },
     crystalsGained
