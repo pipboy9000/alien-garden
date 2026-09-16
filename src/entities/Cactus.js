@@ -44,11 +44,12 @@ export async function create(x, y, level = 1, onCrystalCollected, getProductionR
     ps.onDrawParticle = (ctx, particle) => {
         // ctx.fillStyle = "#44ff44cc";
         ctx.beginPath();
-        const radialGradient = ctx.createRadialGradient(particle.x, particle.y + particle.z, 0, particle.x, particle.y + particle.z, 4);
+        const radialGradient = ctx.createRadialGradient(particle.x, particle.y + particle.z, 0, particle.x, particle.y + particle.z, 5);
         radialGradient.addColorStop(0, "#ffffffcc");
         radialGradient.addColorStop(1, "#ff44ff00");
         ctx.fillStyle = radialGradient;
-        ctx.arc(particle.x, particle.y + particle.z, 4, 0, 2 * Math.PI);
+        ctx.globalAlpha = 1 - particle.age / ps.maxParticleAge;
+        ctx.arc(particle.x, particle.y + particle.z, 5, 0, 2 * Math.PI);
         ctx.fill();
     };
     addEntity(ps);
@@ -96,7 +97,7 @@ export async function create(x, y, level = 1, onCrystalCollected, getProductionR
             const amount = ratePerSecond * elapsedSeconds;
             if (amount > 0) {
                 entity.flash(200, "purple");
-                const label = await FloatingNumber.create(entity.x, entity.y + 1, `+${amount.toFixed(1)}`);
+                const label = await FloatingNumber.create(entity.x, entity.y + 1, 80, `+${amount.toFixed(1)}`);
                 addEntity(label);
             }
         }
