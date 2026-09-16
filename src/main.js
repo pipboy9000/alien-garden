@@ -288,7 +288,11 @@ async function boot() {
     paths: {
       levels: 'levels/',
       levelScripts: 'levels/',
-      entityScripts: 'entities/',
+      // Dev: Vite's dev server transforms src/entities/Player.js on request (resolving its
+      // bare "@chickenfart/engine/..." imports). Prod: that file is prebuilt as its own
+      // self-contained bundle at entities/Player.js by vite.config.js's rollupOptions.input,
+      // since a plain copy under public/ would keep its unresolved bare imports and 404/fail.
+      entityScripts: import.meta.env.DEV ? 'src/entities/' : 'entities/',
       entityResources: 'entities/resources/',
       floorTiles: 'src/floorTiles/'
     }
