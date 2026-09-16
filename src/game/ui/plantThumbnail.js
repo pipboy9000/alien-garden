@@ -8,7 +8,7 @@ function loadThumbnail(plantId, level) {
 
   promise = (async () => {
     const image = new Image();
-    image.src = `/thumbnails/${plantId}/level-${level}.png`;
+    image.src = `${import.meta.env.BASE_URL}thumbnails/${plantId}/level-${level}.png`;
     await image.decode();
     return image;
   })();

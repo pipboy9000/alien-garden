@@ -20,7 +20,7 @@ export function isPointOnFloor(x, y) {
 async function loadFloorShape(levelId, floorEntityName) {
   const [levelJson, resourceJson] = await Promise.all([
     fetch(`levels/${levelId}.json`).then((res) => res.json()),
-    fetch(`src/entities/resources/${floorEntityName}/${floorEntityName}.json`).then((res) => res.json())
+    fetch(`entities/resources/${floorEntityName}/${floorEntityName}.json`).then((res) => res.json())
   ]);
 
   const floorEntity = levelJson.entities.find((ent) => ent.name === floorEntityName);

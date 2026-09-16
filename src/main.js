@@ -288,8 +288,8 @@ async function boot() {
     paths: {
       levels: 'levels/',
       levelScripts: 'levels/',
-      entityScripts: 'src/entities/',
-      entityResources: 'src/entities/resources/',
+      entityScripts: 'entities/',
+      entityResources: 'entities/resources/',
       floorTiles: 'src/floorTiles/'
     }
   });
